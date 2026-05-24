@@ -1,0 +1,22 @@
+{
+  "name": "woxa-broker-fullstack-test",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run start:dev -w @woxa/api\" \"npm run dev -w @woxa/web\"",
+    "build": "npm run build -w @woxa/api && npm run build -w @woxa/web",
+    "test": "node scripts/e2e-smoke.mjs",
+    "test:e2e": "node scripts/e2e-smoke.mjs",
+    "test:build": "npm run build",
+    "db:migrate": "npm run prisma:migrate -w @woxa/api",
+    "db:push": "npm run prisma:push -w @woxa/api",
+    "db:seed": "npm run prisma:seed -w @woxa/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

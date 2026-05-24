@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: woxa-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: woxa
+      POSTGRES_PASSWORD: woxa_password
+      POSTGRES_DB: woxa_brokers
+    ports:
+      - "15432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U woxa -d woxa_brokers"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: woxa-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://woxa:woxa_password@postgres:5432/woxa_brokers?schema=public
+      JWT_SECRET: change-me-in-production
+      FRONTEND_URL: http://localhost:3000
+      PORT: 4000
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:4000/api
+    container_name: woxa-web
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4000/api
+      INTERNAL_API_URL: http://api:4000/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
